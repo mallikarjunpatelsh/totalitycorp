@@ -13,6 +13,7 @@ import android.provider.MediaStore
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.registerForActivityResult
 import androidx.annotation.RequiresApi
@@ -80,29 +81,40 @@ class CameraActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     val cameraActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         if(it.resultCode == RESULT_OK){
-            setContentView(R.layout.activity_camera)
-            val data = it.data
-            val image = data?.extras?.get("data") as Bitmap
-            var previewView = findViewById<ImageView>(R.id.preview_view)
-            previewView.setImageBitmap(image)
-            bitmapOfImage = image
-            findViewById<Button>(R.id.rotate_pic).setOnClickListener{
-                val matrix = Matrix()
-                matrix.postScale(1.toFloat(), 1.toFloat())
-                matrix.postRotate(90f)
-//                val bitmap: Bitmap = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.RGB_565);
-                val bitmap2 = Bitmap.createBitmap(
-                    bitmapOfImage, 0, 0, bitmapOfImage.width,
-                    bitmapOfImage.height, matrix, false
-                )
-                previewView.setImageBitmap(bitmap2)
-                bitmapOfImage = bitmap2
-            }
+            imageEdit(it, "CAMERA")
         }
     }
 
     val galleryActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+        if(it.resultCode == RESULT_OK){
+            imageEdit(it, "GALLERY")
+        }
+    }
 
+    private fun imageEdit(it: ActivityResult, from: String){
+        setContentView(R.layout.activity_camera)
+        val data = it.data
+        val image: Bitmap
+        if(from.equals("CAMERA")) {
+            image = data?.extras?.get("data") as Bitmap
+        }else{
+             image = MediaStore.Images.Media.getBitmap(this.contentResolver, data?.data)
+        }
+        var previewView = findViewById<ImageView>(R.id.preview_view)
+        previewView.setImageBitmap(image)
+        bitmapOfImage = image
+        findViewById<Button>(R.id.rotate_pic).setOnClickListener{
+            val matrix = Matrix()
+            matrix.postScale(1.toFloat(), 1.toFloat())
+            matrix.postRotate(90f)
+//                val bitmap: Bitmap = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.RGB_565);
+            val bitmap2 = Bitmap.createBitmap(
+                bitmapOfImage, 0, 0, bitmapOfImage.width,
+                bitmapOfImage.height, matrix, false
+            )
+            previewView.setImageBitmap(bitmap2)
+            bitmapOfImage = bitmap2
+        }
     }
 
 }
